@@ -1,0 +1,216 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getAll",
+        "simple": false,
+        "filters": {
+          "q": "from:(elenawolfvin@gmail.com OR thebatch@deeplearning.ai OR hello@deeplearning.ai)",
+          "readStatus": "unread"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "983172c6-d444-4632-a70e-6bbf19b1b0d2",
+      "name": "Get many messages",
+      "webhookId": "997440db-01ee-4e00-948a-a33272f4a342",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HcOwZ9pwjWMyea8Q",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import re\n\noutput = []\nfor item in _input.all():\n    subject = item.json.get('subject', '')\n    text = item.json.get('text', '')  \n    cleaned_text = re.sub(r'\\(http.*?\\)', '', text).strip()\n    output.append({\n        'json': {\n            'subject': subject,\n            'text': cleaned_text\n        }\n    })\nreturn output"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "e9293702-bba0-4b19-bb23-dd713c5509bb",
+      "name": "Code in Python (Beta)"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Summarize the following newsletter:\nSubject: {{$json[\"subject\"]}}\nText: {{$json[\"text\"]}}"
+            },
+            {
+              "content": "You are a helpful newsletter summarizer. When summarizing a letter, first you should determine main topics then summarize each of them in 2-3 sentences. \nReturn the output in the following format:\n\\nSubject: \\n<newsletter subject>\n\\nSummary: \\n*<topic>*\n\\n<the few sentences summarizing the topic>",
+              "role": "system"
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 1000,
+          "temperature": 0.4,
+          "topP": 0.9
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        624,
+        0
+      ],
+      "id": "88a6cd53-191f-403a-b308-1b669b19fb9d",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "m6fufSggKWVotsda",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "-1002743171142",
+        "text": "={{$json[\"message\"][\"content\"]}}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        976,
+        0
+      ],
+      "id": "bfcb107f-6de5-45ff-8b8a-27f72fe4dde0",
+      "name": "Send a text message",
+      "webhookId": "812d1df4-1d3f-426d-81a3-e18b4edd4da7",
+      "retryOnFail": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "HgUrRchinCIIbu1m",
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 4
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        32,
+        0
+      ],
+      "id": "c1430e1f-befd-4a42-833b-9aca019be0ce",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "messageId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        176
+      ],
+      "id": "6d5f6bae-f0e2-4dcc-88e3-2206e5fbfd76",
+      "name": "Delete a message",
+      "webhookId": "30cd4484-4310-416d-b1e8-fb2cfb3ae0b6",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HcOwZ9pwjWMyea8Q",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Code in Python (Beta)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Delete a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python (Beta)": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e133ec2d-5f87-4aa0-97ef-830807913a90",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bf348e9270005ee1a8f8c7f7ca20469febeba67310a6446a6f90ab4c8be01f23"
+  },
+  "id": "8EDWc9RJbj3LdNPR",
+  "tags": []
+}
