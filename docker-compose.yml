@@ -10,6 +10,7 @@ services:
       - N8N_BASIC_AUTH_USER=admin
       - N8N_BASIC_AUTH_PASSWORD=admin
       - N8N_USER_MANAGEMENT_DISABLED=true
+      - N8N_SECURE_COOKIE=false
       # Add your email, Telegram, and LLM API keys here as needed
     volumes:
       - ./n8n_data:/home/node/.n8n
