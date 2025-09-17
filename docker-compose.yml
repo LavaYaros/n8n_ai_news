@@ -6,11 +6,15 @@ services:
     ports:
       - 5678:5678
     environment:
-      - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=admin
-      - N8N_USER_MANAGEMENT_DISABLED=true
-      - N8N_SECURE_COOKIE=false
+    - N8N_PROTOCOL=http
+    - N8N_HOST=45.137.67.204
+    - WEBHOOK_URL=http://45.137.67.204:5678
+    - N8N_BASIC_AUTH_ACTIVE=true
+    - N8N_BASIC_AUTH_USER=admin
+    - N8N_BASIC_AUTH_PASSWORD=admin
+    - N8N_BASIC_AUTH_EXCLUDE_ENDPOINTS=rest/oauth2-credential/callback,rest/oauth1-credential/callback
+    - N8N_USER_MANAGEMENT_DISABLED=true
+    - N8N_SECURE_COOKIE=false
       # Add your email, Telegram, and LLM API keys here as needed
     volumes:
       - ./n8n_data:/home/node/.n8n
