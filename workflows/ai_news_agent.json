@@ -6,15 +6,15 @@
         "operation": "getAll",
         "simple": false,
         "filters": {
-          "q": "from:(elenawolfvin@gmail.com OR thebatch@deeplearning.ai OR hello@deeplearning.ai)",
-          "readStatus": "unread"
+          "readStatus": "unread",
+          "sender": "={{ $json.emails }}"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        208,
+        416,
         0
       ],
       "id": "983172c6-d444-4632-a70e-6bbf19b1b0d2",
@@ -22,7 +22,7 @@
       "webhookId": "997440db-01ee-4e00-948a-a33272f4a342",
       "credentials": {
         "gmailOAuth2": {
-          "id": "HcOwZ9pwjWMyea8Q",
+          "id": "1Xj7VW8SxrqwNB2q",
           "name": "Gmail account"
         }
       },
@@ -31,12 +31,12 @@
     {
       "parameters": {
         "language": "python",
-        "pythonCode": "import re\n\noutput = []\nfor item in _input.all():\n    subject = item.json.get('subject', '')\n    text = item.json.get('text', '')  \n    cleaned_text = re.sub(r'\\(http.*?\\)', '', text).strip()\n    output.append({\n        'json': {\n            'subject': subject,\n            'text': cleaned_text\n        }\n    })\nreturn output"
+        "pythonCode": "import re\n\noutput = []\nfor item in _input.all():\n    subject = item.json.get('subject', '')\n    text = item.json.get('text', '')  \n    #cleaned_text = re.sub(r'\\(http.*?\\)', '', text).strip()\n    output.append({\n        'json': {\n            'subject': subject,\n            'text': text\n        }\n    })\nreturn output"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        416,
+        624,
         0
       ],
       "id": "e9293702-bba0-4b19-bb23-dd713c5509bb",
@@ -53,10 +53,10 @@
         "messages": {
           "values": [
             {
-              "content": "=Summarize the following newsletter:\nSubject: {{$json[\"subject\"]}}\nText: {{$json[\"text\"]}}"
+              "content": "=Summarize the following newsletter:\nText: {{$json[\"text\"]}}"
             },
             {
-              "content": "You are a helpful newsletter summarizer. When summarizing a letter, first you should determine main topics then summarize each of them in 2-3 sentences. \nReturn the output in the following format:\n\\nSubject: \\n<newsletter subject>\n\\nSummary: \\n*<topic>*\n\\n<the few sentences summarizing the topic>",
+              "content": "You are a precise newsletter summarizer.\n\nSCOPE (include only if present):\nresearch/model releases; framework/tooling updates; cloud/API changes; RAG/search; serving/performance; data/datasets; fine-tuning/adaptation; evaluation/observability; security/privacy/safety; compliance/standards; multimodal/speech; edge/on-device; hardware/capacity/cost; learning resources (new courses/tutorials/books); helpful platforms/sandboxes; case studies/postmortems with metrics.\n\n\n\nTASK\n1) Split the letter into 1-3 topic chunks (3 maximum). Keep ONLY chunks within SCOPE.  \n2) Give each kept chunk a concise topic name.\n3) Summarize each kept topic in 2–3 factual sentences (key claims, metrics/dates, links if present).\n4) Order topics by importance.\n\nRULES\n- Use only information in the letter; no speculation.\n- If the subject is missing, use “(none)”.\n- If no relevant topics are found, return an empty string.\n\nOUTPUT FORMAT (exactly):\n\n\nTopic: *<topic name>*\n<2–3 sentences>\n\nTopic: *<topic name>*\n<2–3 sentences>",
               "role": "system"
             }
           ]
@@ -70,14 +70,15 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
       "position": [
-        624,
+        832,
         0
       ],
       "id": "88a6cd53-191f-403a-b308-1b669b19fb9d",
       "name": "Message a model",
+      "retryOnFail": true,
       "credentials": {
         "openAiApi": {
-          "id": "m6fufSggKWVotsda",
+          "id": "2TjeHfdpkPwGGo6F",
           "name": "OpenAi account"
         }
       }
@@ -85,16 +86,17 @@
     {
       "parameters": {
         "chatId": "-1002743171142",
-        "text": "={{$json[\"message\"][\"content\"]}}",
+        "text": "={{ $json.content }}",
         "additionalFields": {
-          "appendAttribution": false
+          "appendAttribution": false,
+          "parse_mode": "HTML"
         }
       },
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
       "position": [
-        976,
-        0
+        1360,
+        432
       ],
       "id": "bfcb107f-6de5-45ff-8b8a-27f72fe4dde0",
       "name": "Send a text message",
@@ -102,7 +104,7 @@
       "retryOnFail": true,
       "credentials": {
         "telegramApi": {
-          "id": "HgUrRchinCIIbu1m",
+          "id": "PQ6EN7qR89YBzTtz",
           "name": "Telegram account"
         }
       },
@@ -136,7 +138,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        416,
+        624,
         176
       ],
       "id": "6d5f6bae-f0e2-4dcc-88e3-2206e5fbfd76",
@@ -144,10 +146,83 @@
       "webhookId": "30cd4484-4310-416d-b1e8-fb2cfb3ae0b6",
       "credentials": {
         "gmailOAuth2": {
-          "id": "HcOwZ9pwjWMyea8Q",
+          "id": "1Xj7VW8SxrqwNB2q",
           "name": "Gmail account"
         }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1wWgaRjZyCmrWWJQqQRsA4WwgZXai1uFwKHOVuLZSQBU",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "0",
+          "mode": "id"
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        240,
+        0
+      ],
+      "id": "3a7feddc-32d5-4b0e-a31d-ade4834b917c",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NSsyJ3nb33N6RMn2",
+          "name": "Google Sheets account"
+        }
       }
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import re\n\noutput = []\nfor item in _input.all(): \n  content = item.json.get('message').get('content', '')\n  if \"Topic:\" in content:\n    chunks = re.split('Topic:', content)\n    for c in chunks:\n      c = c.strip()\n      if not c:\n        continue\n      first, *rest = c.split('\\n', 1)\n      bolded = f\"<b>{first.strip('*')}</b>\" + (\"\\n\\n\" + rest[0] if rest else \"\")\n      output.append({'json': {'content': bolded}})\n\nreturn output\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        0
+      ],
+      "id": "e6a1266e-fb29-46ba-b93f-cff478e4b2e4",
+      "name": "Code in Python (Beta)1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1344,
+        0
+      ],
+      "id": "63270447-f044-4e59-b75a-5fa5224cc259",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        208
+      ],
+      "id": "a3cb29f1-032e-480a-8e5b-2d8aa56abe30",
+      "name": "Wait",
+      "webhookId": "45c89dcc-c241-4069-b938-2bcdd276ee84"
     }
   ],
   "pinData": {},
@@ -183,7 +258,7 @@
       "main": [
         [
           {
-            "node": "Send a text message",
+            "node": "Code in Python (Beta)1",
             "type": "main",
             "index": 0
           }
@@ -194,7 +269,63 @@
       "main": [
         [
           {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
             "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in Python (Beta)1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
             "type": "main",
             "index": 0
           }
@@ -202,14 +333,18 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "timezone": "Europe/Kyiv",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "8EDWc9RJbj3LdNPR",
+    "timeSavedPerExecution": 60
   },
-  "versionId": "e133ec2d-5f87-4aa0-97ef-830807913a90",
+  "versionId": "3f2953f5-1393-4f3b-8a2b-e1c0e1d612dc",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "bf348e9270005ee1a8f8c7f7ca20469febeba67310a6446a6f90ab4c8be01f23"
+    "instanceId": "abaf1847f11e3f1859140d8184b939c584e560ede60154b82e0f0971bf68714e"
   },
   "id": "8EDWc9RJbj3LdNPR",
   "tags": []

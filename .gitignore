@@ -1,5 +1,8 @@
 .env
 n8n_data/
+Caddyfile
+
+# temporary files
 details.txt
 google_assistant_details.json
-Caddyfile
+setup_history.txt

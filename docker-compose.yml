@@ -5,12 +5,13 @@ services:
     restart: always
     environment:
       - N8N_PROTOCOL=https
-      - N8N_HOST=45-137-67-204.sslip.io
-      - WEBHOOK_URL=https://45-137-67-204.sslip.io
-      - N8N_EDITOR_BASE_URL=https://45-137-67-204.sslip.io
+      - N8N_HOST=${N8N_HOST}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL}
       - N8N_BASIC_AUTH_ACTIVE=true
-      - N8N_BASIC_AUTH_USER=admin
-      - N8N_BASIC_AUTH_PASSWORD=admin
+      - N8N_BASIC_AUTH_USER=${N8N_BASIC_AUTH_USER}
+      - N8N_BASIC_AUTH_PASSWORD=${N8N_BASIC_AUTH_PASSWORD}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
       - N8N_BASIC_AUTH_EXCLUDE_ENDPOINTS=rest/oauth2-credential/callback,rest/oauth1-credential/callback
       - N8N_USER_MANAGEMENT_DISABLED=true
       - N8N_SECURE_COOKIE=true
